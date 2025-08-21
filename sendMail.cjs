@@ -21,28 +21,47 @@ const transporter = nodemailer.createTransport({
 
 // Route to send email
 app.post('/api/sendMail', async (req, res) => {
-  const { name, email, number, area, message } = req.body;
+  // Support both payload formats
+  // Old: { name, email, number, area, message }
+  // New: { name, email, subject, phone, message }
+  const {
+    name,
+    email,
+    number,
+    area,
+    message,
+    subject,
+    phone
+  } = req.body;
 
-  // Basic validation
-  if (!name || !email || !number || !area || !message) {
-    return res.status(400).json({ error: 'All fields are required.' });
+  // Determine which format is being used
+  let mailText = '';
+  let mailSubject = '';
+  if (subject && phone) {
+    // New format
+    mailSubject = `New Message (${subject}) from ${name}`;
+    mailText = `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\nSubject: ${subject}\nMessage: ${message}`;
+    if (!name || !email || !phone || !subject || !message) {
+      return res.status(400).json({ error: 'All fields are required.' });
+    }
+  } else {
+    // Old format
+    mailSubject = `New Message from ${name}`;
+    mailText = `Name: ${name}\nEmail: ${email}\nNumber: ${number}\nArea: ${area}\nMessage: ${message}`;
+    if (!name || !email || !number || !area || !message) {
+      return res.status(400).json({ error: 'All fields are required.' });
+    }
   }
 
   // Log incoming payload for debugging
   console.log('Payload received:', req.body);
 
   const mailOptions = {
-    from: 'latestaltfordiscord@gmail.com',
-    to: 'latestaltfordiscord@gmail.com',
-    subject: `New Message from ${name}`,
+    from: 'gaurav.119@gmail.com',
+    to: 'gaurav.119@gmail.com',
+    subject: mailSubject,
     replyTo: email,
-    text: `
-Name: ${name}
-Email: ${email}
-Number: ${number}
-Area: ${area}
-Message: ${message}
-    `
+    text: mailText
   };
 
   try {
