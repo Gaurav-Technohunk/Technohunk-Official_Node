@@ -16,14 +16,15 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.USER,
     pass: process.env.PASS
+  },
+  tls: {
+    rejectUnauthorized: false
   }
 });
 
 // Route to send email
 app.post('/api/sendMail', async (req, res) => {
   // Support both payload formats
-  // Old: { name, email, number, area, message }
-  // New: { name, email, subject, phone, message }
   const {
     name,
     email,
@@ -38,14 +39,14 @@ app.post('/api/sendMail', async (req, res) => {
   let mailText = '';
   let mailSubject = '';
   if (subject && phone) {
-    // New format
+    // First Form format
     mailSubject = `New Message (${subject}) from ${name}`;
     mailText = `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\nSubject: ${subject}\nMessage: ${message}`;
     if (!name || !email || !phone || !subject || !message) {
       return res.status(400).json({ error: 'All fields are required.' });
     }
   } else {
-    // Old format
+    // Second Form format
     mailSubject = `New Message from ${name}`;
     mailText = `Name: ${name}\nEmail: ${email}\nNumber: ${number}\nArea: ${area}\nMessage: ${message}`;
     if (!name || !email || !number || !area || !message) {
@@ -57,8 +58,8 @@ app.post('/api/sendMail', async (req, res) => {
   console.log('Payload received:', req.body);
 
   const mailOptions = {
-    from: 'gaurav.119@gmail.com',
-    to: 'gaurav.119@gmail.com',
+    from: 'hr@technohunk.in',
+    to: 'hr@technohunk.in',
     subject: mailSubject,
     replyTo: email,
     text: mailText
